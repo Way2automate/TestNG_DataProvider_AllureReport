@@ -1,0 +1,38 @@
+package com.qa.utils;
+
+import com.qa.configs.GlobalVariables;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
+
+import java.io.File;
+import java.io.IOException;
+
+public class PDFUtil implements GlobalVariables {
+
+    private static final Logger LOG = LogManager.getLogger(PDFUtil.class);
+
+    public synchronized static String read(String fileName) throws InterruptedException {
+        String text = null;
+        try {
+            File pdfFile = new File(DOWNLOAD_FOLDER.concat(fileName));
+            waitUntilDownloadCompleted(pdfFile);
+            PDDocument doc = PDDocument.load(pdfFile);
+            text = new PDFTextStripper().getText(doc);;
+            LOG.info(text);
+        } catch (IOException e) {
+            LOG.error("Error while reading"+fileName+" file", e);
+        }
+        return text;
+    }
+
+    private static void waitUntilDownloadCompleted(File pdfFile) throws InterruptedException {
+        for(int i=0; i< DOWNLOAD_WAIT/10; i++) {
+            if (pdfFile.exists())
+                break;
+            Thread.sleep(5000);
+            System.out.println("Waiting for file download");
+        }
+    }
+}
